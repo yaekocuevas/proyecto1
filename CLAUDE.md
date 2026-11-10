@@ -13,8 +13,8 @@
 
 - Repo: `yaekocuevas/proyecto1`
 - Dueño del Project: `yaekocuevas`
-- Número del Project: pendiente (todavía no hay tablero)
-- URL del tablero: pendiente
+- Número del Project: `1`
+- URL del tablero: `https://github.com/users/yaekocuevas/projects/1`
 - URL de preview para QA: ninguna todavía
 - Cómo abrir la app en local: pendiente (lo define Diego cuando haya código)
 
