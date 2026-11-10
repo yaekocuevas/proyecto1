@@ -11,10 +11,10 @@
 
 ## Tablero
 
-- Repo: `diegochoqueramirez/artist-page`
-- Dueño del Project: `diegochoqueramirez`
-- Número del Project: `1`
-- URL del tablero: `https://github.com/users/diegochoqueramirez/projects/1`
+- Repo: `yaekocuevas/proyecto1`
+- Dueño del Project: `yaekocuevas`
+- Número del Project: pendiente (todavía no hay tablero)
+- URL del tablero: pendiente
 - URL de preview para QA: ninguna todavía
 - Cómo abrir la app en local: pendiente (lo define Diego cuando haya código)
 
