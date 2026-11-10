@@ -7,7 +7,7 @@
 - Diseño de referencia: artifact "Mi página web" (`https://claude.ai/artifact/KpfyS8NfbHgvWNiSXR3Cd7`). Es una referencia visual; el código sale de los specs, no de copiar el canvas.
 - Visión y plan de producto: `docs/producto.md`, lo mantiene la PO con `/producto`.
 - Guía de la PO: `docs/guia-po.md`.
-- Stack: **pendiente de decisión** (lo define Diego). No asumir un framework hasta que esté escrito aquí.
+- Stack: HTML + CSS + JS puro, sin framework (decidido en `specs/01-inicio-evento.md`). Se revisa cuando haya backend o más páginas.
 
 ## Tablero
 
@@ -16,7 +16,7 @@
 - Número del Project: `1`
 - URL del tablero: `https://github.com/users/yaekocuevas/projects/1`
 - URL de preview para QA: ninguna todavía
-- Cómo abrir la app en local: pendiente (lo define Diego cuando haya código)
+- Cómo abrir la app en local: abrir `index.html` con doble clic en el navegador.
 
 ## Equipo y roles
 
