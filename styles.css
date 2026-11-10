@@ -1,0 +1,84 @@
+:root {
+  --fondo: #0d0d14;
+  --texto: #ffffff;
+  --texto-suave: #d6d6e2;
+  --acento: #f5c542;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+body {
+  min-height: 100vh;
+}
+
+.inicio {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem 1rem;
+  gap: 0.5rem;
+  max-width: 100%;
+}
+
+.presenta {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--texto-suave);
+  letter-spacing: 0.05em;
+}
+
+.nombre {
+  margin: 0.25rem 0 0;
+  font-size: clamp(3rem, 14vw, 7rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
+}
+
+.subtitulo {
+  margin: 0;
+  font-size: clamp(1.1rem, 4vw, 1.6rem);
+  color: var(--acento);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.frase {
+  margin: 1.5rem 0 0;
+  font-size: clamp(1rem, 3.5vw, 1.25rem);
+  color: var(--texto);
+  max-width: 32ch;
+}
+
+.fecha {
+  margin: 1rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.lugar {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--texto-suave);
+}
+
+:focus-visible {
+  outline: 3px solid var(--acento);
+  outline-offset: 3px;
+}
