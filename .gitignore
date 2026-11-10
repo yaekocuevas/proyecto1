@@ -1,0 +1,18 @@
+# Variables de entorno y secretos: nunca se suben al repo.
+.env
+.env.*
+!.env.example
+
+# Dependencias y artefactos de build
+node_modules/
+dist/
+build/
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Configuración local de Claude Code (cada persona tiene la suya)
+.claude/settings.local.json

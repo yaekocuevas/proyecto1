@@ -1,0 +1,62 @@
+name: Historia de usuario
+description: Describe qué necesita un usuario y para qué. La PO la escribe; el dev asignado hace el spec técnico.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Escribe **qué** se necesita y **para qué**, sin decidir **cómo** se hace. El cómo lo define el dev en el spec.
+        Consejo: usa `/historia` en Claude Code y te guiará paso a paso.
+
+  - type: textarea
+    id: historia
+    attributes:
+      label: Historia
+      description: "Formato: Como [tipo de usuario], quiero [lo que necesita], para [el beneficio]."
+      placeholder: "Como visitante de la página, quiero ver los proyectos de la artista, para conocer su trabajo."
+    validations:
+      required: true
+
+  - type: textarea
+    id: contexto
+    attributes:
+      label: Contexto
+      description: Por qué es importante ahora y cualquier información que ayude a entenderla.
+    validations:
+      required: false
+
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Criterios de aceptación
+      description: "Lo que vas a poder comprobar tú misma. Formato: Dado [situación], cuando [acción], entonces [resultado visible]."
+      placeholder: |
+        - [ ] Dado que abro la página, cuando bajo hasta Proyectos, entonces veo 3 tarjetas con título y descripción.
+    validations:
+      required: true
+
+  - type: textarea
+    id: fuera-de-alcance
+    attributes:
+      label: Fuera de alcance
+      description: Lo que esta historia NO incluye, para que no se haga "de paso".
+    validations:
+      required: true
+
+  - type: textarea
+    id: referencias
+    attributes:
+      label: Diseño o referencias
+      description: Enlaces al diseño, capturas o ejemplos.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: prioridad
+    attributes:
+      label: Prioridad
+      options:
+        - "P0 — Urgente, bloquea otras cosas"
+        - "P1 — Importante para el MVP"
+        - "P2 — Puede esperar"
+    validations:
+      required: true
