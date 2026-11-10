@@ -1,159 +1,139 @@
 ---
 name: historia
-description: Para la PO (Yaeko). Con una idea, la convierte en una historia de usuario clara y la publica en el Backlog del tablero. Con "#N", ayuda a responder las preguntas que dejó el equipo en ese ticket y mejora la historia.
+description: Kit de la PO. Crea una historia de usuario clara y sin ambigüedades y la publica como issue en la columna Backlog del tablero. Con "#N", revisa y mejora una historia existente (por ejemplo, para responder preguntas de Diego).
 disable-model-invocation: true
-argument-hint: '<idea> | #<número del issue>'
-allowed-tools: Read, Glob, Grep, AskUserQuestion, Write, Bash(gh issue:*), Bash(gh project:*)
+argument-hint: '<idea en una frase> | #N'
+allowed-tools: Read, Edit, Write, Glob, AskUserQuestion, Bash(gh issue:*), Bash(gh project:*), Bash(date:*)
 ---
 
-# /historia — Escribir o mejorar una historia
+# /historia — Crear o mejorar una historia de usuario
 
-Hablas con la PO. No uses jerga técnica (nada de "endpoint", "componente", "base de datos"). Si una palabra técnica es inevitable, explícala en una frase.
+## Cómo hablar con la PO
+
+- Es su primer proyecto y no tiene perfil técnico. Habla en **español simple**, con frases cortas.
+- Explica cada término la primera vez. Ejemplos:
+  - "Historia de usuario = qué necesita alguien y para qué".
+  - "Criterio de aceptación = algo que podrás comprobar tú misma mirando la app".
+- **Nunca** pidas decisiones técnicas. Si aparece una (cómo guardar datos, qué tecnología usar), escríbela en el Contexto como `Pregunta para Diego: ...` y sigue.
+- Pregunta de **3 en 3** con `AskUserQuestion`. Da opciones concretas, con tu recomendación primero y marcada "(Recomendado)".
+- Pide confirmación con un "sí" antes de cualquier cambio en GitHub.
 
 ## Paso 0: configuración
 
-Lee de `CLAUDE.md` la sección `## Tablero` (repo, dueño y número del Project) y la `## Definition of Ready`. Lee también `docs/producto.md`, si tiene contenido, para entender el producto, el MVP y las historias ya planeadas.
+Lee la sección `## Tablero` del `CLAUDE.md` del proyecto. De ahí salen el **repo**, el **dueño del Project** y el **número del Project**. Si no existe esa sección, pregunta esos tres datos y ofrece agregarla a `CLAUDE.md`. Nunca los inventes.
 
-Según el argumento:
-- Empieza con `#` seguido de un número → **Modo B: responder preguntas**.
-- Cualquier otro texto → **Modo A: historia nueva**.
-- Vacío → pregunta qué quiere pedir. Si `docs/producto.md` tiene historias planeadas sin publicar, ofrécelas como opciones.
+Lee también `docs/producto.md`, si existe. Úsalo para entender el producto y no repetir preguntas que ya tienen respuesta.
 
----
+## Paso 1: elegir el modo
 
-## Modo A: historia nueva
+- **`$ARGUMENTS` es `#N` (modo mejorar):**
+  - Lee el issue con `gh issue view N -R <repo> --json title,body,comments,state`.
+  - Resume en simple qué dice la historia y qué preguntas o comentarios dejó Diego (busca `Preguntas para la PO`).
+  - Ve al paso 2, solo con lo que falta o lo que hay que aclarar.
+- **`$ARGUMENTS` es una idea (modo crear):** úsala como punto de partida.
+- **Está vacío:** si `docs/producto.md` tiene historias pendientes (`- [ ]`), muestra las primeras 5 y pregunta cuál hacer. Si no hay, pide la idea en una frase.
 
-### A1. Revisar duplicados
+## Paso 2: preguntas de negocio
 
-Busca historias parecidas: `gh issue list -R <repo> --state all --search "<palabras clave>" --json number,title,state`. Si hay una muy parecida, muéstrala y pregunta si es la misma, si es una mejora de esa, o si es distinta.
+Ve bloque por bloque y espera la respuesta antes de seguir:
 
-### A2. Entrevista
+1. **Quién y para qué:** qué tipo de usuario, qué quiere hacer y qué gana con eso.
+2. **Cómo lo vas a comprobar:** describe qué verías en la pantalla cuando funcione. Pide ejemplos concretos: textos exactos, cuántos elementos, qué pasa si algo sale mal (por ejemplo, un campo vacío).
+3. **Límites:** qué NO incluye esta historia, si hay un diseño o referencia, y la prioridad.
+   - **P0:** urgente, bloquea otras cosas.
+   - **P1:** importante para el MVP.
+   - **P2:** puede esperar.
 
-Haz pocas preguntas a la vez (máximo 3 por turno), con `AskUserQuestion` cuando haya opciones claras. Lo que necesitas saber:
+Si detectas palabras vagas ("rápido", "bonito", "fácil", "intuitivo", "etc.", "y más"), pregunta qué significan con un ejemplo observable.
 
-1. **Quién:** ¿para qué tipo de persona es? (visitante, cliente, la artista misma…).
-2. **Qué:** ¿qué quiere poder hacer o ver?
-3. **Para qué:** ¿qué gana con eso?
-4. **Cómo lo vas a comprobar:** situaciones concretas que la PO podrá probar mirando la página. Pide números y textos reales ("3 tarjetas", "el botón dice *Escríbeme*").
-5. **Qué NO incluye:** lo que se deja para otra historia.
-6. **Prioridad:** P0 (urgente, bloquea otras cosas), P1 (importante para el MVP) o P2 (puede esperar).
-7. **Referencias:** si hay diseño, capturas o ejemplos. El diseño de referencia del proyecto está en `CLAUDE.md`.
+## Paso 3: escribir la historia
 
-Reglas de la entrevista:
-- **No inventes textos, precios ni datos.** Si la historia necesita un texto real (una bio, un precio, un correo) y la PO no lo tiene, anótalo en el contexto como pendiente.
-- **No decidas el cómo técnico.** Si la PO propone una solución técnica ("usar WordPress", "una base de datos"), reformúlala como necesidad y deja la decisión al equipo.
-- Si la idea es muy grande (más de 5 criterios o varias cosas distintas), propón dividirla en varias historias y escribe una a la vez.
+Convierte cada cosa comprobable en un criterio con este formato:
+`- [ ] Dado <situación>, cuando <acción>, entonces <resultado que se ve>.`
 
-### A3. Redactar
+**Título:** corto, desde el punto de vista del usuario, empezando con un verbo, de hasta 60 caracteres. Ejemplo: `Ver los proyectos en la página principal`.
 
-Arma la historia con este formato exacto (los títulos `###` son los de la plantilla y `/triage` los busca):
+**Cuerpo:** usa exactamente estos encabezados, que son los mismos de la plantilla del repo:
 
-```
+```markdown
 ### Historia
 
-Como <tipo de usuario>, quiero <lo que necesita>, para <el beneficio>.
+Como **<usuario>**, quiero **<necesidad>**, para **<beneficio>**.
 
 ### Contexto
 
-<por qué importa ahora; pendientes de textos o datos, si los hay>
+<por qué importa; preguntas para Diego si las hay>
 
 ### Criterios de aceptación
 
-- [ ] Dado <situación>, cuando <acción>, entonces <resultado visible>.
+- [ ] Dado ..., cuando ..., entonces ...
 
 ### Fuera de alcance
 
-- <lo que no incluye>
+- ...
 
 ### Diseño o referencias
 
-<enlaces, o "Diseño de referencia: <URL de CLAUDE.md>", o "_No response_">
+<enlaces o "Ninguna">
 
 ### Prioridad
 
 <P0 — Urgente, bloquea otras cosas | P1 — Importante para el MVP | P2 — Puede esperar>
 ```
 
-### A4. Revisar con la Definition of Ready
+## Paso 4: revisión de calidad
 
-Antes de mostrarla, comprueba:
-- Formato Como / quiero / para.
-- Entre 1 y 5 criterios Dado / cuando / entonces, y cada resultado se puede ver o comprobar.
-- Al menos un punto en Fuera de alcance.
-- Tiene prioridad.
-- Sin palabras vagas: "bonito", "rápido", "moderno", "fácil", "intuitivo", "etc.", "y eso", "mejorar", "optimizar". Si aparece alguna, pregunta qué significa concretamente.
-- Sin decisiones técnicas.
+Comprueba cada punto y explícale a la PO, en simple, lo que no cumpla:
 
-Si algo falla, vuelve a preguntar solo lo que falta.
+- **Tiene valor:** se entiende qué gana el usuario.
+- **Es comprobable:** cada criterio describe algo que se ve o se hace en la app. Nada como "que funcione bien".
+- **Es pequeña:** tiene como máximo 5 criterios. Si tiene más, o mezcla dos objetivos, propone dividirla en varias historias y crea una por una.
+- **Es independiente:** si depende de otra, lo dice en Contexto con el número `#N`.
+- **No dice cómo construirla:** describe el qué, no el cómo. Si menciona tecnología, muévelo a "Pregunta para Diego".
 
-### A5. Confirmar y publicar
+## Paso 5: confirmar
 
-1. Muestra el título propuesto (corto, en español, empieza con verbo o sustantivo: "Ver proyectos en la página principal") y la historia completa. Pide confirmación o cambios.
-2. Guarda el cuerpo en un archivo temporal y publica:
-   ```
-   gh issue create -R <repo> --title "<título>" --body-file <archivo>
-   ```
-3. Agrega el issue al tablero y ponlo en Backlog. Lee los IDs, nunca de memoria:
-   ```
-   gh project item-add <número> --owner <dueño> --url <url del issue> --format json
-   gh project field-list <número> --owner <dueño> --format json
-   gh project view <número> --owner <dueño> --format json
-   gh project item-edit --id <item> --project-id <proyecto> --field-id <Status> --single-select-option-id <Backlog>
-   ```
-4. Si la historia venía de la lista de `docs/producto.md`, anota el número del issue junto a ella en ese archivo y dile a la PO que ese cambio queda sin subir.
+Muestra el título y el cuerpo completos, y pregunta:
 
-### A6. Reportar
+```
+¿Publico esta historia en el tablero (columna Backlog)? (sí / cambiar algo)
+```
 
-Muestra el número y la URL del issue, y explica el siguiente paso: "Diego la revisará con `/triage`. Si tiene preguntas, las verás en `/tablero` y las respondes con `/historia #N`."
+En modo mejorar, pregunta: `¿Actualizo el issue #N con esta versión?`
 
----
+## Paso 6: publicar
 
-## Modo B: responder preguntas (`/historia #N`)
+**Modo crear:**
+1. Busca duplicados: `gh issue list -R <repo> --state all --search "<título>" --json number,title`. Si hay uno igual, muéstralo y pregunta si mejoramos ese en lugar de crear otro.
+2. Guarda el cuerpo en un archivo temporal, en el scratchpad de la sesión, nunca dentro del proyecto. Luego crea el issue: `gh issue create -R <repo> --title "<título>" --body-file <archivo>`.
+3. Agrégalo al tablero: `gh project item-add <número> --owner <dueño> --url <url> --format json`. Guarda el `id`.
+4. Lee los IDs actuales, **nunca de memoria**:
+   - `gh project field-list <número> --owner <dueño> --format json`
+   - `gh project view <número> --owner <dueño> --format json` (este da el id del proyecto)
+5. Pon Status = `Backlog` y Priority = la elegida, con `gh project item-edit --id <item> --project-id <proyecto> --field-id <campo> --single-select-option-id <opción>`.
 
-### B1. Leer el ticket
+**Modo mejorar:**
+- Actualiza el cuerpo con `gh issue edit N -R <repo> --body-file <archivo>`. Si el título cambió, usa también `--title`.
+- Si respondiste preguntas de Diego, deja un comentario corto: `gh issue comment N -R <repo> --body "Respondí las preguntas: <resumen>"`.
+- No cambies la columna.
 
-1. `gh issue view N -R <repo> --json title,body,url,state,labels,comments`.
-2. Busca la columna del ticket en `gh project item-list <número> --owner <dueño> --format json --limit 200`.
-3. Busca los comentarios que empiezan con `**Preguntas para la PO:**`. Toma los que no tienen después un comentario `**Respuestas de la PO:**`.
-4. Si no hay preguntas pendientes, dilo y pregunta si quiere cambiar algo de la historia. Si quiere, sigue con B3.
+## Paso 7: actualizar el plan y reportar
 
-### B2. Responder
+Si la historia venía de `docs/producto.md`, cambia su línea de `- [ ]` a `- [x] ... → #N`. Es el único cambio que haces en ese archivo.
 
-Para cada pregunta:
-1. Explícala en palabras simples, y por qué el equipo la necesita.
-2. Si hay opciones claras, ofrécelas con `AskUserQuestion`. Si la respuesta depende de un dato que la PO no tiene, se puede responder "lo averiguo" y queda pendiente.
-3. No inventes la respuesta por ella.
+Responde:
 
-### B3. Actualizar
+```
+✅ Historia <publicada | actualizada>: #N <título>
+   <url>
 
-1. Si las respuestas cambian la historia (criterios, alcance, contexto), reescribe el cuerpo con el formato de A3 y revísalo con A4.
-2. Muestra a la PO el comentario de respuestas y, si aplica, la historia nueva. Pide confirmación.
-3. Publica:
-   ```
-   gh issue edit N -R <repo> --body-file <archivo>     (solo si cambió)
-   gh issue comment N -R <repo> --body-file <archivo>
-   ```
-   El comentario:
-   ```
-   **Respuestas de la PO:**
-
-   1. <respuesta a la pregunta 1>
-   2. <respuesta a la pregunta 2>
-
-   <"Actualicé la historia: <qué cambió>." o "La historia no cambia.">
-   ```
-
-### B4. Reportar
-
-Muestra la URL del issue y explica qué pasa ahora:
-- En **Backlog:** Diego vuelve a hacer `/triage`.
-- En **Especificación** o más adelante: el dev sigue con su trabajo. Si cambiaron los criterios, avisa que el spec tendrá que ajustarse.
-
----
+Qué sigue: Diego hará el triage (asigna quién la hace).
+Puedes ver cómo va con /tablero.
+```
 
 ## Reglas
 
-- No cambies la columna del ticket, salvo ponerlo en Backlog al crearlo.
-- No asignes responsable, tamaño ni áreas. Eso es `/triage`.
-- No cierres tickets aquí. Eso es `/qa`.
-- Nunca publiques sin que la PO confirme el texto.
+- No asignes dev, tamaño ni labels de área: eso lo decide Diego en `/triage`.
+- No muevas tickets de columna, salvo Backlog al crear.
+- No inventes textos, precios ni datos del negocio: pregúntalos.
+- Si un comando de `gh` falla, muestra el error en simple ("GitHub respondió: ...") y detente.

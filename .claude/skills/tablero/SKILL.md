@@ -1,65 +1,85 @@
 ---
 name: tablero
-description: Para la PO (Yaeko). Resume el estado del tablero y dice qué necesita su atención hoy: tickets para probar, preguntas sin responder, bloqueos y si faltan historias en el Backlog. Solo lee, no cambia nada.
+description: Kit de la PO. Resume el tablero en lenguaje simple y dice qué necesita tu atención hoy (tickets para probar, preguntas de Diego, bloqueos). Solo lectura.
 disable-model-invocation: true
-allowed-tools: Read, Bash(gh project:*), Bash(gh issue:*), Bash(gh pr:*)
+allowed-tools: Read, Bash(gh project:*), Bash(gh issue:*)
 ---
 
-# /tablero — ¿Qué necesita mi atención?
+# /tablero — ¿Qué tengo que hacer hoy?
 
-Hablas con la PO, en palabras simples. Este comando **solo lee**: no mueve tickets, no comenta, no edita.
+Esta skill es **solo de lectura**: no cambia nada en GitHub.
+
+## Cómo hablar con la PO
+
+- Usa español simple, sin jerga técnica.
+- Empieza por lo que la necesita a ella. Lo demás va después, resumido.
 
 ## Paso 0: configuración
 
-Lee la sección `## Tablero` de `CLAUDE.md` (repo, dueño, número y URL del Project) y la regla de WIP en `## Reglas del flujo`.
+Lee la sección `## Tablero` del `CLAUDE.md` del proyecto: repo, dueño del Project y número del Project. Si no existe, pide esos datos y detente.
 
 ## Paso 1: leer el tablero
 
-1. `gh project item-list <número> --owner <dueño> --format json --limit 200`.
-   Por cada item toma: número del issue, título, `status`, `size` y labels.
-2. `gh issue list -R <repo> --state open --json number,title,labels,comments,updatedAt --limit 200`.
-3. Si hay tickets en "Revisión", busca su PR: `gh pr list -R <repo> --state open --search "Refs #N" --json number,title,url,reviewDecision`.
-
-Si un issue abierto no está en el tablero, anótalo para avisar.
-
-## Paso 2: detectar lo que necesita a la PO
-
-En este orden de importancia:
-
-1. **🧪 Para probar:** tickets en "Prueba (QA)". Por cada uno, sugiere `/qa N`. Si llevan más de 2 días ahí (según `updatedAt`), dilo: el dev está esperando.
-2. **❓ Preguntas sin responder:** tickets con un comentario `**Preguntas para la PO:**` que no tiene después un `**Respuestas de la PO:**`. Sugiere `/historia #N`.
-3. **⛔ Bloqueados:** tickets con el label `bloqueado`. Muestra el último comentario que explica el bloqueo, si lo hay, y si la PO puede ayudar.
-4. **📥 Backlog:** cuántas historias hay esperando triage. Si hay menos de 3, sugiere escribir más con `/historia <idea>`. Si `docs/producto.md` tiene historias planeadas sin número de issue, nómbralas como ideas.
-5. **↩️ Devueltos por QA:** tickets en "En implementación" con un comentario `❌ QA falló` reciente. Es solo informativo.
-
-## Paso 3: avisos del equipo
-
-Solo informativos, en una línea cada uno:
-- Más de 1 ticket "En implementación" para el mismo responsable (label `Diego` o `Aldrin`), o más de 2 en "Especificación": incumple el límite de WIP.
-- Issues abiertos que no están en el tablero.
-- Tickets en "Cerrado" que siguen abiertos, o issues cerrados fuera de "Cerrado".
-
-## Paso 4: mostrar
-
-Formato:
-
 ```
-## Tu tablero — <fecha>
-
-### Te toca a ti
-<lista de los puntos 1 a 3 del Paso 2, con número, título y el comando sugerido.
- Si no hay nada: "Nada urgente. 🎉">
-
-### Resumen
-| Columna | Tickets |
-|---|---|
-| Backlog | #N título, … |
-| … (las 7 columnas, en orden) |
-
-### Sugerencias
-<puntos 4 y 5 del Paso 2, y los avisos del Paso 3>
-
-Tablero: <URL del tablero>
+gh project item-list <número> --owner <dueño> --format json --limit 200
 ```
 
-Mantén el reporte corto. Si una columna tiene más de 5 tickets, muestra 5 y "y N más".
+De cada item toma: número de issue, título, `status`, `priority`, `size` y labels. Si un item no tiene status, cuéntalo como "Sin columna".
+
+## Paso 2: buscar lo que necesita a la PO
+
+1. **Para probar:** items en `Prueba (QA)`.
+2. **Preguntas de Diego:** para items en `Backlog` o `Especificación`, lee los comentarios:
+   ```
+   gh issue view <N> -R <repo> --json comments
+   ```
+   Si el último comentario que contiene `Preguntas para la PO` no tiene después un comentario con `Respondí`, cuenta el ticket como "pregunta sin responder".
+3. **Bloqueados:** items con el label `bloqueado`.
+
+Para no hacer demasiadas llamadas, revisa los comentarios de como máximo 15 tickets, empezando por los de mayor prioridad.
+
+## Paso 3: responder
+
+Usa este formato:
+
+```
+## 👋 Lo que necesita tu atención
+
+**Para probar (QA):**
+- #12 Ver los proyectos en la página principal → corre /qa 12
+
+**Preguntas de Diego sin responder:**
+- #15 Formulario de contacto → corre /historia #15
+
+**Bloqueados:**
+- #9 ... (ver el último comentario)
+
+(Si no hay nada: "Nada urgente hoy. ✨")
+
+## 📋 Resumen del tablero
+
+| Columna | Cantidad | Tickets |
+|---|---|---|
+| Backlog | 3 | #15, #16, #17 |
+| Especificación | 1 | #14 (Aldrin) |
+| Listos para implementar | 0 | — |
+| En implementación | 1 | #13 (Diego) |
+| Revisión | 0 | — |
+| Prueba (QA) | 1 | #12 |
+| Cerrado | 4 | — |
+
+## 👉 Siguiente paso sugerido
+<una sola acción concreta, con el comando exacto>
+```
+
+Para elegir el siguiente paso, usa esta prioridad:
+1. Probar lo que está en QA.
+2. Responder preguntas de Diego.
+3. Si el Backlog tiene menos de 3 historias, crear la siguiente historia pendiente de `docs/producto.md` con `/historia`.
+
+En la columna Tickets, muestra el responsable (label `Diego` o `Aldrin`) entre paréntesis cuando exista.
+
+## Reglas
+
+- No modifiques nada: ni issues, ni columnas, ni archivos.
+- Si un comando falla, explica el error en simple y sugiere avisarle a Diego.

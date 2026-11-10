@@ -1,107 +1,116 @@
 ---
 name: qa
-description: Para la PO (Yaeko). Guía paso a paso la prueba de un ticket en "Prueba (QA)". Si todo pasa, deja "✅ QA aprobado", lo mueve a Cerrado y cierra el issue. Si algo falla, deja un reporte de bug claro y lo devuelve a "En implementación".
+description: Kit de la PO. Te guía paso a paso para probar un ticket en la columna "Prueba (QA)". Si todo pasa, lo cierra; si algo falla, deja un reporte de bug claro y lo devuelve a "En implementación".
 disable-model-invocation: true
-argument-hint: '<número del issue>'
-allowed-tools: Read, Glob, Grep, AskUserQuestion, Write, Bash(gh issue:*), Bash(gh project:*), Bash(gh pr:*), Bash(git pull:*), Bash(git log:*)
+argument-hint: '<número del issue, por ejemplo 12>'
+allowed-tools: Read, Glob, Grep, Write, AskUserQuestion, Bash(gh issue:*), Bash(gh project:*), Bash(git pull:*), Bash(git status:*), Bash(git branch:*)
 ---
 
-# /qa — Probar un ticket
+# /qa — Probar un ticket y decidir
 
-Hablas con la PO, que no programa. Instrucciones cortas y concretas: qué abrir, dónde hacer clic, qué mirar.
+## Cómo hablar con la PO
+
+- Usa español simple. Cada prueba debe poder hacerla alguien sin conocimientos técnicos.
+- Explica qué hacer, qué deberías ver y cómo responder.
+- **Nunca** arregles código ni intentes resolver errores técnicos. Si algo no arranca, redacta un mensaje para Diego.
+- Pide confirmación con un "sí" antes de publicar algo en GitHub.
 
 ## Paso 0: configuración
 
-Lee de `CLAUDE.md` la sección `## Tablero` (repo, dueño, número del Project, **URL de preview para QA** y **cómo abrir la app en local**) y la `## Definition of Done`.
+Lee la sección `## Tablero` del `CLAUDE.md` del proyecto. De ahí salen:
+- El repo, el dueño del Project y el número del Project.
+- La **URL de preview para QA** y **cómo abrir la app en local**, si están definidas.
 
-## Paso 1: comprobar que está listo para QA
+Si falta el número de issue en `$ARGUMENTS`, pídelo.
 
-1. `gh issue view N -R <repo> --json title,body,url,state,labels,comments`.
-2. Busca el item en `gh project item-list <número> --owner <dueño> --format json --limit 200`.
-3. Si no está en "Prueba (QA)", di en qué columna está y detente. Probar antes de tiempo hace perder tiempo a todos.
-4. Comprueba que el código está en `main`: `gh pr list -R <repo> --state merged --search "Refs #N" --json number,title,url,mergedAt`. Si no hay PR mergeado, avisa y detente.
+## Paso 1: verificar el ticket
 
-## Paso 2: preparar la lista de pruebas
+1. Lee el tablero con `gh project item-list <número> --owner <dueño> --format json --limit 200`. Busca el item por la URL del issue.
+2. Si su `status` no es `Prueba (QA)`, explica en qué columna está y detente.
+3. Lee el issue con `gh issue view N -R <repo> --json title,body,url,comments`.
 
-1. `git pull` en `main` para tener los specs al día.
-2. Busca el spec del ticket: el archivo en `specs/` cuyo encabezado contiene `> **Issue:** #N`.
-3. La lista de pruebas sale de:
-   - los **criterios de la historia** (sección `### Criterios de aceptación` del issue), que son los que la PO escribió;
-   - los **criterios de aceptación del spec**, si agregan algo que la PO puede ver. Tradúcelos a lenguaje simple y omite los que solo puede comprobar un dev.
-4. Agrega siempre estas pruebas generales, si el ticket cambia algo visible:
-   - Se ve bien en un celular (o con la ventana angosta), sin tener que mover la página hacia los lados.
-   - Los botones y enlaces nuevos funcionan con clic, y también con la tecla Tab (se ve un borde o marca en el que está seleccionado) y Enter.
-5. Si el spec no existe o no tiene criterios, usa solo los de la historia y avísalo en el reporte.
+## Paso 2: tener la versión más reciente
 
-## Paso 3: abrir la app
+Pregunta: "¿Actualizo tu copia del proyecto con lo último de main?"
+
+Si dice que sí:
+1. Ejecuta `git status --short`. Si hay cambios locales, no hagas pull: explícale que hay archivos modificados y sugiérele preguntarle a Diego.
+2. Revisa la rama actual con `git branch --show-current`. Si no es `main`, detente y sugiérele preguntarle a Diego cómo cambiar a `main`.
+3. Si todo está bien, ejecuta `git pull --ff-only`. Si falla, muestra el error en simple y detente.
+
+## Paso 3: preparar las pruebas
+
+1. Toma los **criterios de aceptación** de la historia (sección `### Criterios de aceptación` del issue).
+2. Busca el spec aprobado: el archivo de `specs/` que contiene la línea `> **Issue:** #N`, buscando con Grep. Si existe, úsalo para entender detalles concretos como textos exactos o tamaños.
+3. Escribe **una prueba por criterio de la historia**, en este formato:
+
+```
+Prueba 1 de 3 — <nombre corto>
+  Haz esto:     <pasos concretos: abre…, haz clic en…, achica la ventana…>
+  Deberías ver: <resultado esperado, con los textos exactos si los hay>
+```
+
+Los criterios del spec que solo se pueden comprobar mirando el código (por ejemplo "no hay colores fuera de :root") **no** se convierten en pruebas para la PO. Anótalos como: "Esto lo revisó Diego en el código".
+
+Para pruebas de celular, explica cómo simularlo en el navegador. En Chrome: clic derecho → "Inspeccionar" → icono del celular, y elegir un ancho de 375.
+
+## Paso 4: abrir la app
 
 - Si hay **URL de preview**, dásela.
-- Si no, y hay instrucciones de **cómo abrir la app en local**, guíala paso a paso.
-- Si no hay ninguna de las dos, detente: explica que no hay dónde probar y sugiere pedirle a Diego que lo defina en `CLAUDE.md`. No muevas el ticket.
+- Si hay **instrucciones locales** en `CLAUDE.md` o en el README, muéstralas paso a paso.
+- Si no hay nada, explica que falta, propón este mensaje para Diego: "¿Cómo abro la app para probar el #N?", y detente.
 
-## Paso 4: probar criterio por criterio
+Pregunta si logró abrirla. Si no lo logró, ofrece el mensaje para Diego y detente.
 
-Por cada prueba:
-1. Explica en 1 a 3 pasos qué hacer y qué debería ver.
-2. Pregunta con `AskUserQuestion`: **Funciona** / **No funciona** / **No pude probarlo**.
-3. Si **No funciona**, pregunta (de a una cosa, sin presionar):
-   - ¿Qué viste en vez de lo esperado?
-   - ¿En qué dispositivo y navegador? (por ejemplo, "celular Android, Chrome")
-   - ¿Tienes una captura? Puede pegarla en el issue después.
-4. Si **No pude probarlo**, pregunta por qué (no encontró dónde, la página no carga…) e intenta ayudar. Si no se resuelve, cuenta como pendiente.
+## Paso 5: probar una por una
 
-Si la PO nota algo que **no está en los criterios** (le gustaría otro color, falta una sección), no es un fallo de QA: anótalo como **idea para una historia nueva**.
+Muestra cada prueba y pregunta con `AskUserQuestion`: **Pasó** / **Falló** / **No pude probarla**.
 
-## Paso 5: resultado
+- Si **falló**: pregunta qué vio exactamente. Pídele una captura si puede, y que la adjunte después en el issue.
+- Si **no pudo probarla**: pregunta por qué.
 
-Muestra el resumen (✅ / ❌ / ⏸ por prueba) y el comentario que se va a publicar. **Pide confirmación antes de publicar o mover nada.**
+## Paso 6: decidir y publicar
 
-### Si todo funciona
+Muestra el resumen y el comentario que vas a publicar, y pide un "sí".
 
-1. Comentario:
+**Si todas pasaron:**
+1. Comenta en el issue:
    ```
-   ✅ QA aprobado — <fecha>
-
-   Probado en: <dispositivos y navegadores>
-
-   - [x] <criterio 1>
-   - [x] <criterio 2>
+   ✅ QA aprobado (<fecha>)
+   - [x] Prueba 1: <nombre>
+   - [x] Prueba 2: <nombre>
    ```
-2. Mueve el item a "Cerrado" con `gh project item-edit`. Lee los IDs con `gh project field-list` y `gh project view`, nunca de memoria.
-3. Cierra el issue: `gh issue close N -R <repo> --reason completed`.
+2. Mueve el item a `Cerrado` con `gh project item-edit`. Obtén los IDs con `gh project field-list` y `gh project view`, nunca de memoria.
+3. Cierra el issue: `gh issue close N -R <repo>`.
 
-### Si algo falla
-
-1. Comentario:
+**Si alguna falló:**
+1. Comenta en el issue el reporte de bug:
    ```
-   ❌ QA falló — <fecha>
+   ❌ QA: hay que corregir (<fecha>)
 
-   Probado en: <dispositivos y navegadores>
+   **Prueba que falló:** <nombre>
+   **Qué hice:** <pasos>
+   **Qué esperaba ver:** <resultado esperado>
+   **Qué vi:** <lo que contó la PO>
 
-   **Funciona:**
-   - [x] <criterio>
-
-   **No funciona:**
-   - [ ] <criterio>
-     - **Pasos:** <qué hizo la PO>
-     - **Esperado:** <lo que dice el criterio>
-     - **Obtenido:** <lo que vio>
-
-   **Siguiente paso (@<responsable según el label>):** arreglar en un PR nuevo con `Refs #N` y volver a pasarlo a "Prueba (QA)".
+   Las demás pruebas: <pasaron / no se pudieron probar>
    ```
-   No escribas `@` delante del nombre si el responsable no tiene usuario de GitHub conocido. Usa el label (`Diego` o `Aldrin`).
-2. Mueve el item a "En implementación". El issue queda abierto.
+2. Mueve el item a `En implementación`. No cierres el issue.
 
-### Si hay pruebas pendientes y ninguna falla
+**Si hubo pruebas que no pudo hacer, y ninguna falló:**
+- Comenta qué no se pudo probar y por qué. Deja el ticket en `Prueba (QA)` y sugiere avisarle a Diego.
 
-No apruebes ni muevas. Publica un comentario `⏸ QA pendiente` con lo que falta y por qué, y explica que puede volver a correr `/qa N` después.
+## Paso 7: reportar
 
-## Paso 6: reportar
+```
+<✅ Ticket #N cerrado | ❌ Ticket #N devuelto a En implementación | ⏸️ Ticket #N sigue en QA>
+<url>
 
-Muestra la URL del issue y la columna nueva. Si salieron ideas nuevas, ofrécele escribirlas con `/historia <idea>`.
+Siguiente: corre /tablero para ver qué más te toca.
+```
 
 ## Reglas
 
-- Nunca marques como aprobado algo que la PO no probó.
-- No pidas a la PO que lea código ni que use la terminal, salvo para abrir la app en local si no hay preview.
-- No cierres tickets fuera de este comando. Solo la PO cierra tickets.
+- No modifiques código ni archivos del proyecto.
+- No uses otros comandos de git además de `status`, `branch --show-current` y `pull --ff-only`.
+- No cierres un ticket si alguna prueba falló o no se pudo hacer.
